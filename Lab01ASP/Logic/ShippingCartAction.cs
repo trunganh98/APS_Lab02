@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using Lab01ASP.Logic;
 
 
 namespace Lab01ASP.Logic
@@ -93,6 +94,106 @@ namespace Lab01ASP.Logic
                 return cart; 
             }
         }
-    
+
+        public void EmptyCart()
+        {
+            ShoppingCartId = GetCartId();
+            var cartItems = _db.ShoppingCartItems.Where(c => c.CartId == ShoppingCartId);
+            foreach (var cartItem in cartItems)
+            {
+                _db.ShoppingCartItems.Remove(cartItem);
+            }
+            _db.SaveChanges();
+        }
+
+        public int GetCount()
+        {
+            ShoppingCartId = GetCartId();
+
+            int? count = (from CartItems in _db.ShoppingCartItems
+                          where CartItems.CartId == ShoppingCartId
+                          select (int?)CartItems.Quantity).Sum();
+            return count ?? 0;
+        }
+
+        public void RemoveItem(string removeCartID, int removeProductID)
+    {
+        using (var _db = new Lab01ASP.Models.ProductContext())
+        {
+            try
+            {
+                var myItem = (from c in _db.ShoppingCartItems where c.CartId == removeCartID &&
+                              c.Product.ProductID == removeProductID select c).FirstOrDefault();
+                if (myItem != null)
+                {
+                    _db.ShoppingCartItems.Remove(myItem);
+                    _db.SaveChanges();
+                }
+            }
+            catch (Exception exp)
+            {
+                throw new Exception("ERROR: Unable to Update Cart Database - " + exp.Message.ToString(), exp);
+            }
+        }
     }
+
+    public void UpdateItem(string updateCartID, int updateProductID, int quantity)
+    {
+        using (var _db = new Lab01ASP.Models.ProductContext())
+        {
+            try
+            {
+                var myItem = (from c in _db.ShoppingCartItems where c.CartId == updateCartID &&
+                              c.Product.ProductID == updateProductID select c).FirstOrDefault();
+                if (myItem != null)
+                {
+                    myItem.Quantity = quantity;
+                    _db.SaveChanges();
+                }
+            }
+            catch (Exception exp)
+            {
+                throw new Exception("ERROR: Unable to Update Cart Database - " + exp.Message.ToString(), exp);
+            }
+        }
+    }
+        public struct ShoppingCartUpdates
+        {
+            public int ProductId;
+            public int PurchaseQuantity;
+            public bool RemoveItem;
+        }
+
+        public void UpdateShoppingCartDatabase(String cartId, ShoppingCartUpdates[] CartItemUpdates)
+        {
+            using (var db = new Lab01ASP.Models.ProductContext())
+                try
+                {
+                    int CartItemCount = CartItemUpdates.Count();
+                    List<CartItem> myCart = GetCastItems();
+                    foreach (var cartItem in myCart)
+                    {
+                        for (int i = 0; i < CartItemCount; i++)
+                        {
+                            if (cartItem.Product.ProductID == CartItemUpdates[i].ProductId)
+                            {
+                                if (CartItemUpdates[i].PurchaseQuantity < 1 || CartItemUpdates[i].RemoveItem == true)
+                                {
+                                    RemoveItem(cartId, cartItem.ProductId);
+                                }
+                                else
+                                {
+                                    UpdateItem(cartId, cartItem.ProductId, CartItemUpdates[i].PurchaseQuantity);
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception exp)
+                {
+                    throw new Exception("ERROR: Unable to Update Cart Database - " + exp.Message.ToString(), exp);
+                }
+        }
+    }
+
 }

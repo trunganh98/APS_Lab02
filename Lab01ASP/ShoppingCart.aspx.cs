@@ -51,8 +51,8 @@ namespace Lab01ASP
             using (ShippingCartAction usersShoppingCart = new ShippingCartAction())
             {
                 String cartId = usersShoppingCart.GetCartId();
-                ShippingCartAction.ShoppingCartUpdates[] cartUpdates = new
-                    ShippingCartAction.ShoppingCartUpdates[CartList.Rows.Count];
+
+                ShippingCartAction.ShoppingCartUpdates[] cartUpdates = new ShippingCartAction.ShoppingCartUpdates[CartList.Rows.Count];
                 for (int i = 0; i < CartList.Rows.Count; i++)
                 {
                     IOrderedDictionary rowValues = new OrderedDictionary();
@@ -71,7 +71,7 @@ namespace Lab01ASP
                 usersShoppingCart.UpdateShoppingCartDatabase(cartId, cartUpdates);
                 CartList.DataBind();
                 lblTotal.Text = String.Format( "{0:c}", usersShoppingCart.GetTotal());
-                return usersShoppingCart.GetCartItems(); 
+                return usersShoppingCart.GetCastItems(); 
                 
                 }
              }
